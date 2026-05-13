@@ -75,7 +75,7 @@ Konfigurasi repository GitHub sebagai pusat manajemen proyek. Buat GitHub Projec
 ---
 
 ### #03 — Buat HLD topologi jaringan (draw.io / Visio) — draft pertama
-**Sprint:** Minggu 1 — 11–17 Mei | **Label:** `[dokumentasi]` | **Assignee:** Dea, Triyas
+**Sprint:** Minggu 1 — 11–17 Mei | **Label:** `[dokumentasi]` | **Assignee:** Dea
 
 **Deskripsi**
 
@@ -237,7 +237,7 @@ Buat dashboard monitoring yang memberikan visibilitas real-time kepada SOC team.
 ---
 
 ### #12 — Active Response: auto-block IP via pfSense API + notifikasi Telegram bot ★ INOVASI
-**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Rafli, Triyas
+**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Triyas
 
 **Deskripsi**
 
@@ -291,7 +291,7 @@ Implementasi asset discovery otomatis menggunakan Nmap yang dijadwalkan berjalan
 ---
 
 ### #15 — Integrasi honeypot alert: Wazuh + Telegram notifikasi real-time ★ INOVASI
-**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani, Rafli
+**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani
 
 **Deskripsi**
 
@@ -309,7 +309,7 @@ Hubungkan log honeypot (Cowrie/OpenCanary) ke Wazuh agar setiap interaksi dengan
 ---
 
 ### #16 — Buat LLD (Low-Level Design): sensor placement dan log flow diagram
-**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[dokumentasi]` | **Assignee:** Dea, Triyas
+**Sprint:** Minggu 2 — 18–24 Mei | **Label:** `[dokumentasi]` | **Assignee:** Dea
 
 **Deskripsi**
 
@@ -421,7 +421,7 @@ Lakukan port scanning agresif dari Kali Linux menggunakan Nmap untuk mensimulasi
 ---
 
 ### #22 — Simulasi serangan 3: Mimikatz credential dump + lateral movement detection
-**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` | **Assignee:** Yusmadani, Rafli
+**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` | **Assignee:** Yusmadani
 
 **Deskripsi**
 
@@ -457,7 +457,7 @@ Simulasikan perilaku ransomware menggunakan script yang melakukan enkripsi massa
 ---
 
 ### #24 — Simulasi Log4Shell (CVE-2021-44228): payload JNDI + custom detection rule ★ INOVASI
-**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani, Rafli
+**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani
 
 **Deskripsi**
 
@@ -475,7 +475,7 @@ Simulasikan eksploitasi Log4Shell dengan mengirimkan HTTP request berisi payload
 ---
 
 ### #25 — Identity-based detection: suspicious admin login (terinspirasi kasus MGM 2023) ★ INOVASI
-**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani, Rafli
+**Sprint:** Minggu 3 — 25–31 Mei | **Label:** `[teknis]` `[inovasi]` | **Assignee:** Yusmadani, Ramadhona
 
 **Deskripsi**
 
@@ -622,7 +622,7 @@ Kumpulkan, organisir, dan kompilasi seluruh bukti dari simulasi serangan Minggu 
 ---
 
 ### #33 — Finalisasi HLD & LLD: dokumen arsitektur final (deliverable 1)
-**Sprint:** Minggu 4 — 1–3 Juni | **Label:** `[dokumentasi]` | **Assignee:** Dea, Triyas
+**Sprint:** Minggu 4 — 1–3 Juni | **Label:** `[dokumentasi]` | **Assignee:** Dea
 
 **Deskripsi**
 
