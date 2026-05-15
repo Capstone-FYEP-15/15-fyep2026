@@ -368,21 +368,5 @@ Diagram ini dirancang untuk memvalidasi deteksi terhadap 6 skenario serangan ber
 
 ---
 
-## 9. Catatan Versi
-
-| Versi | Tanggal | Author | Perubahan |
-|---|---|---|---|
-| v1.0 | 14 Mei 2026 | Dea Kristin Ginting | Draft pertama HLD — diajukan untuk review Triyas |
-
-### Status Review
-
-| Reviewer | Role | Status | Tanggal |
-|---|---|---|---|
-| Triyas Niko Saputra | Network Engineer | ⏳ Pending | — |
-
-> **Catatan:** HLD ini akan diperbarui menjadi v1.1 setelah mendapat approval dari Triyas dan IP scheme final dari Issue #04 (Setup VM environment) sudah ditetapkan. LLD (Low-Level Design) akan dibuat di Minggu 2 berdasarkan implementasi aktual.
-
----
-
 *Dokumen ini adalah bagian dari deliverable Issue #03 — Project Sentinel, Capstone FYEP Cybersecurity 2026.*
 *Repository: `Capstone FYEP-15 / 15-fyep2026`*
