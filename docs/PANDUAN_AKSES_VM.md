@@ -25,7 +25,7 @@ FYEP Cybersecurity 2026 · InfraDigital Foundation
 | 03 | Wazuh SIEM | — | 72.155.88.10 | 100.87.181.20 | Azure | dea-2 | SSH + Browser | Selalu menyala |
 | 04 | Windows Endpoint | 192.168.10.20 | — | via PC Lab | PC Lab | fyep-2 | RDP + SSH | Saat dibutuhkan |
 | 05 | Linux Endpoint | 192.168.10.30 | — | via PC Lab | PC Lab | fyep-1 | SSH | Saat dibutuhkan |
-| 06 | Kali Linux | — | — | — | Laptop Yusmadani | — | Lokal | Minggu 3 saja |
+| 06 | Kali Linux | — | — | — | Laptop Yusmadani | — | Lokal | — |
 
 > **Password:** Tanyakan ke Dea (PM) via DM. Jangan bagikan password di grup besar.
 
