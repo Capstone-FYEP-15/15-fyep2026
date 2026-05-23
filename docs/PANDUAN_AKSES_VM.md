@@ -18,27 +18,26 @@ FYEP Cybersecurity 2026 · InfraDigital Foundation
 
 ### Daftar VM
 
-| # | VM | IP Lokal | IP Publik | Tailscale IP | Lokasi | Username | Akses | Uptime |
+| # | VM | IP Lokal | Tailscale IP | Lokasi | VLAN | Username | Akses | Uptime |
 |---|---|---|---|---|---|---|---|---|
-| 01 | pfSense | 192.168.10.2 | — | via PC Lab | PC Lab | admin | Browser | Selalu menyala |
-| 02 | Honeypot | — | 20.196.144.29 | 100.71.170.81 | Azure | deaginting | SSH | Selalu menyala |
-| 03 | Wazuh SIEM | — | 72.155.88.10 | 100.87.181.20 | Azure | dea-2 | SSH + Browser | Selalu menyala |
-| 04 | Windows Endpoint | 192.168.10.20 | — | via PC Lab | PC Lab | fyep-2 | RDP + SSH | Saat dibutuhkan |
-| 05 | Linux Endpoint | 192.168.10.30 | — | via PC Lab | PC Lab | fyep-1 | SSH | Saat dibutuhkan |
-| 06 | Kali Linux | — | — | — | Laptop Yusmadani | — | Lokal | — |
+| 01 | pfSense | 192.168.10.2 | via PC Lab | PC Lab | — | admin | Browser | Selalu menyala |
+| 02 | Wazuh SIEM | 192.168.20.10 | 100.84.121.118 | PC Lab | VLAN20 | wazuh-siem | SSH + Browser | Selalu menyala |
+| 03 | Honeypot | 192.168.30.10 | — | PC Lab | VLAN30 | honeypot | SSH | Selalu menyala |
+| 04 | Windows Endpoint | 192.168.10.20 | via PC Lab | PC Lab | VLAN10 | fyep-2 | RDP + SSH | Saat dibutuhkan |
+| 05 | Linux Endpoint | 192.168.10.30 | via PC Lab | PC Lab | VLAN10 | fyep-1 | SSH | Saat dibutuhkan |
+| 06 | Kali Linux | — | — | Laptop Yusmadani | — | — | Lokal | Minggu 3 saja |
 
 > **Password:** Tanyakan ke Dea (PM) via DM. Jangan bagikan password di grup besar.
 
-### Tailscale Network
+### IP Scheme per VLAN
 
-| Perangkat | Tailscale IP | Keterangan |
-|---|---|---|
-| desktop-0j9iojp | 100.101.161.92 | PC Lab — host VM pfSense, Windows, Linux |
-| deaginting | 100.71.170.81 | Azure VM — Honeypot |
-| dea-2 | 100.87.181.20 | Azure VM — Wazuh SIEM |
-| laptop-8rkn3r3o | 100.81.2.27 | Laptop anggota |
+| VLAN | Subnet | Gateway (pfSense) | VM |
+|---|---|---|---|
+| VLAN10 — LAN Produksi | 192.168.10.0/24 | 192.168.10.2 | Windows (10.20), Linux (10.30) |
+| VLAN20 — Management | 192.168.20.0/24 | 192.168.20.1 | Wazuh SIEM (20.10) |
+| VLAN30 — DMZ | 192.168.30.0/24 | 192.168.30.1 | Honeypot (30.10) |
 
-> **Catatan:** VM di PC Lab (pfSense, Windows Endpoint, Linux Endpoint) diakses via subnet `192.168.x.x` — bukan via Tailscale IP langsung. Tailscale PC Lab bertindak sebagai jembatan ke subnet tersebut.
+> **Catatan:** VM di PC Lab diakses via subnet `192.168.x.x` melalui Tailscale PC Lab sebagai jembatan. Wazuh Dashboard juga bisa diakses langsung via Tailscale IP `100.84.121.118`.
 
 ---
 
@@ -64,8 +63,10 @@ Setiap anggota wajib melakukan setup ini **satu kali** sebelum bisa mengakses se
 Buka **PowerShell sebagai Administrator**, jalankan:
 
 ```powershell
-tailscale up --accept-routes
+tailscale up --accept-routes --advertise-routes=192.168.10.0/24,192.168.20.0/24,192.168.30.0/24
 ```
+
+> **Catatan untuk PC Lab:** Gunakan perintah di atas yang menyertakan `--advertise-routes`. Untuk laptop anggota biasa, cukup `tailscale up --accept-routes`.
 
 #### Linux / Mac
 
@@ -99,14 +100,17 @@ tailscale status
 # Test ke PC Lab
 ping 100.101.161.92
 
-# Test ke VM di PC Lab
+# Test ke VM di VLAN10 (via PC Lab)
 ping 192.168.10.2     # pfSense
 ping 192.168.10.20    # Windows Endpoint
 ping 192.168.10.30    # Linux Endpoint
 
-# Test ke Azure VM
-ping 100.71.170.81    # Honeypot
-ping 100.87.181.20    # Wazuh SIEM
+# Test ke Wazuh (via Tailscale langsung)
+ping 100.84.121.118   # Wazuh SIEM
+
+# Test ke VLAN20 dan VLAN30 (via PC Lab)
+ping 192.168.20.10    # Wazuh SIEM
+ping 192.168.30.10    # Honeypot
 ```
 
 Kalau semua ping reply — siap mengakses semua VM.
@@ -159,54 +163,75 @@ ssh admin@192.168.10.2
 
 ---
 
-### VM 02 — Honeypot (Azure)
+### VM 02 — Wazuh SIEM (VLAN20 — PC Lab)
 
-**Fungsi:** Server jebakan Cowrie + OpenCanary di zona DMZ.
+**Fungsi:** SIEM utama — menerima log dari semua endpoint, menjalankan detection rules, menampilkan dashboard.
 
-**Via SSH:**
-```bash
-# Via IP publik
-ssh deaginting@20.196.144.29
-
-# Via Tailscale (dari mana saja)
-ssh deaginting@100.71.170.81
+**Via browser (Wazuh Dashboard) — 2 cara:**
 ```
+# Cara 1: via IP lokal (dari jaringan yang terhubung pfSense)
+https://192.168.20.10
 
-**Cek log honeypot:**
-```bash
-# Log realtime Cowrie
-tail -f /var/log/cowrie/cowrie.log
+# Cara 2: via Tailscale (dari mana saja, tanpa perlu PC Lab sebagai jembatan)
+https://100.84.121.118
 
-# Log JSON (untuk integrasi Wazuh)
-tail -f /var/log/cowrie/cowrie.json
-```
-
----
-
-### VM 03 — Wazuh SIEM (Azure)
-
-**Fungsi:** SIEM utama — menerima log, menjalankan detection rules, menampilkan dashboard.
-
-**Via browser (Wazuh Dashboard):**
-```
-https://72.155.88.10
-
-Username : dea-2
+Username : admin
 Password : (tanyakan ke Dea)
 ```
 
 **Via SSH:**
 ```bash
-# Via IP publik
-ssh dea-2@72.155.88.10
+# Via IP lokal VLAN20
+ssh wazuh-siem@192.168.20.10
 
 # Via Tailscale (dari mana saja)
-ssh dea-2@100.87.181.20
+ssh wazuh-siem@100.84.121.118
+```
+
+**Perintah berguna setelah masuk:**
+```bash
+# Cek status semua komponen Wazuh
+sudo systemctl status wazuh-manager
+sudo systemctl status wazuh-indexer
+sudo systemctl status wazuh-dashboard
+
+# Cek agent yang terhubung
+sudo /var/ossec/bin/agent_control -l
+
+# Lihat log Wazuh Manager
+sudo tail -f /var/ossec/logs/ossec.log
 ```
 
 ---
 
-### VM 04 — Windows Endpoint
+### VM 03 — Honeypot (VLAN30 — PC Lab)
+
+**Fungsi:** Server jebakan Cowrie (SSH) + OpenCanary (FTP, HTTP) di zona DMZ.
+
+**Via SSH (port admin 22222):**
+```bash
+# Via IP lokal VLAN30
+ssh honeypot@192.168.30.10 -p 22222
+```
+
+> **Catatan:** Port 22 di honeypot sudah diredirect ke Cowrie (honeypot). Akses admin menggunakan port 22222.
+
+**Cek log honeypot:**
+```bash
+# Log realtime Cowrie
+sudo tail -f /home/cowrie/cowrie/var/log/cowrie/cowrie.log
+
+# Log JSON (untuk integrasi Wazuh)
+sudo tail -f /home/cowrie/cowrie/var/log/cowrie/cowrie.json
+
+# Status service
+sudo systemctl status cowrie
+sudo systemctl status opencanary
+```
+
+---
+
+### VM 04 — Windows Endpoint (VLAN10 — PC Lab)
 
 **Fungsi:** Target simulasi serangan Windows — brute force RDP, Mimikatz, Pass-the-Hash, ransomware.
 
@@ -230,7 +255,7 @@ ssh fyep-2@192.168.10.20
 
 ---
 
-### VM 05 — Linux Endpoint
+### VM 05 — Linux Endpoint (VLAN10 — PC Lab)
 
 **Fungsi:** Target simulasi brute force SSH dan Log4Shell. Merepresentasikan production server.
 
@@ -241,15 +266,21 @@ ssh fyep-1@192.168.10.30
 
 **Perintah berguna setelah masuk:**
 ```bash
-# Cek IP
+# Cek IP dan routing
 ip addr show
+ip route show
 
 # Cek status Wazuh agent
 systemctl status wazuh-agent
 
 # Monitor log autentikasi
 tail -f /var/log/auth.log
+
+# Cek fix-route service (routing Tailscale)
+sudo systemctl status fix-route.service
 ```
+
+> **Catatan:** VM ini menggunakan `fix-route.service` untuk mencegah Tailscale meng-override routing ke VLAN lain. Jika setelah restart tidak bisa diakses dari VLAN lain, jalankan: `sudo systemctl restart fix-route.service`
 
 ---
 
@@ -264,7 +295,8 @@ Setelah Tailscale aktif di Kali, semua target langsung bisa dijangkau:
 ping 192.168.10.20    # Windows Endpoint
 ping 192.168.10.30    # Linux Endpoint
 ping 192.168.10.2     # pfSense
-ping 100.71.170.81    # Honeypot (Azure)
+ping 192.168.30.10    # Honeypot
+ping 192.168.20.10    # Wazuh SIEM
 
 # Verifikasi tools tersedia
 nmap --version
@@ -272,7 +304,6 @@ hydra --version
 msfconsole --version
 ```
 
-> Untuk keperluan live demo Minggu 4, Romadhona mengoperasikan Kali Linux ini — koordinasikan dengan Yusmadani untuk akses.
 
 ---
 
@@ -289,7 +320,31 @@ msfconsole --version
 sudo tailscale up --accept-routes
 
 # Windows (PowerShell Admin)
-tailscale up --accept-routes
+tailscale up --accept-routes --advertise-routes=192.168.10.0/24,192.168.20.0/24,192.168.30.0/24
+```
+
+---
+
+### Linux Endpoint tidak bisa diakses dari VM lain setelah restart
+
+Tailscale meng-override routing ke subnet lain. Jalankan fix:
+
+```bash
+# SSH ke fyep-1 via console VMware dulu
+sudo systemctl restart fix-route.service
+sudo systemctl status fix-route.service
+
+# Verifikasi routing
+ip route get 192.168.10.20   # harus via ens33, bukan tailscale0
+ip route get 192.168.20.10   # harus via ens33, bukan tailscale0
+```
+
+Jika masih via tailscale0:
+
+```bash
+sudo ip route del 192.168.10.0/24 table 52 2>/dev/null; true
+sudo ip route del 192.168.20.0/24 table 52 2>/dev/null; true
+sudo ip route del 192.168.30.0/24 table 52 2>/dev/null; true
 ```
 
 ---
@@ -299,41 +354,51 @@ tailscale up --accept-routes
 **Cek SSH di Linux Endpoint:**
 ```bash
 sudo systemctl status ssh
-
-# Aktifkan jika belum jalan
 sudo systemctl start ssh
-sudo systemctl enable ssh
-
-# Izinkan di firewall
 sudo ufw allow ssh
 ```
 
 **Cek RDP di Windows Endpoint:**
 ```
-Windows Security → Firewall & network protection
-→ matikan semua (sementara)
+Windows Security → Firewall & network protection → matikan semua (sementara)
 ```
 
 ---
 
-### PC Lab mati — VM pfSense, Windows, Linux tidak bisa diakses
+### Wazuh agent tidak bisa connect ke Manager
 
-Hubungi anggota yang berada di kampus untuk menyalakan PC Lab. Setelah PC Lab menyala, nyalakan VM dengan urutan:
-
+```bash
+# Cek konfigurasi ossec.conf
+sudo cat /var/ossec/etc/ossec.conf | grep -A 5 "<server>"
 ```
-1. VM pfSense  → nyalakan pertama, tunggu boot ±1 menit
-2. VM Windows  → nyalakan sesuai kebutuhan
-3. VM Linux    → nyalakan sesuai kebutuhan
+
+Pastikan address sudah `192.168.20.10` bukan `MANAGER_IP`:
+
+```bash
+sudo nano /var/ossec/etc/ossec.conf
+# Ubah <address>MANAGER_IP</address> → <address>192.168.20.10</address>
+
+sudo systemctl restart wazuh-agent
+sudo tail -20 /var/ossec/logs/ossec.log
 ```
 
 ---
 
-### Tailscale di PC Lab tidak aktif setelah restart
+### PC Lab mati — VM tidak bisa diakses
 
-Minta anggota di kampus untuk buka PowerShell sebagai Administrator dan jalankan:
+Hubungi anggota yang berada di kampus. Setelah PC Lab menyala, nyalakan VM dengan urutan:
+
+```
+1. VM pfSense       → nyalakan pertama, tunggu boot ±1 menit
+2. VM Wazuh SIEM    → nyalakan kedua
+3. VM Honeypot      → nyalakan ketiga
+4. VM Windows/Linux → nyalakan sesuai kebutuhan
+```
+
+Setelah semua VM menyala, aktifkan kembali Tailscale di PC Lab:
 
 ```powershell
-tailscale up --advertise-routes=192.168.10.0/24,192.168.20.0/24,192.168.30.0/24 --accept-routes
+tailscale up --accept-routes --advertise-routes=192.168.10.0/24,192.168.20.0/24,192.168.30.0/24
 ```
 
 ---
@@ -347,10 +412,13 @@ Normal — koneksi melewati DERP relay Tokyo karena firewall kampus memblokir ko
 ## 5. Hal yang Perlu Diperhatikan
 
 **PC Lab harus menyala untuk akses VM di jaringan lokal.**
-VM pfSense, Windows Endpoint, dan Linux Endpoint hanya bisa diakses selama PC Lab menyala dan Tailscale aktif. Koordinasikan dengan anggota yang berada di kampus.
+pfSense, Wazuh, Honeypot, Windows Endpoint, dan Linux Endpoint hanya bisa diakses selama PC Lab menyala dan Tailscale aktif. Wazuh Dashboard juga bisa diakses via Tailscale IP `100.84.121.118` tanpa bergantung pada subnet routing.
 
 **Jangan matikan pfSense sembarangan.**
-pfSense adalah gateway seluruh jaringan lokal. Jika dimatikan, semua VM di VLAN10 dan VLAN20 kehilangan koneksi.
+pfSense adalah gateway seluruh jaringan lokal. Jika dimatikan, semua VM di VLAN10, VLAN20, dan VLAN30 kehilangan koneksi antar jaringan.
+
+**Urutan menyalakan VM penting.**
+pfSense harus menyala lebih dulu sebelum VM lain agar routing antar VLAN berfungsi.
 
 **Snapshot VM sebelum simulasi serangan (Minggu 3).**
 ```
@@ -369,20 +437,19 @@ Hubungi Dea Kristin Ginting untuk koordinasi penyelesaian.
 ## Ringkasan Cepat
 
 ```
-Tailscale          → login: nescafe7000@gmail.com
-                     jalankan: tailscale up --accept-routes
+Tailscale login    → nescafe7000@gmail.com
+Tailscale run      → tailscale up --accept-routes
 
-pfSense            → http://192.168.10.2           (admin)
-Honeypot           → ssh deaginting@100.71.170.81
-Wazuh Dashboard    → https://72.155.88.10          (dea-2)
-Wazuh SSH          → ssh dea-2@100.87.181.20
-Windows Endpoint   → RDP 192.168.10.20             (fyep-2)
+pfSense GUI        → http://192.168.10.2              (admin)
+Wazuh Dashboard    → https://192.168.20.10            (admin)
+                   → https://100.84.121.118           (admin) ← via Tailscale langsung
+Wazuh SSH          → ssh wazuh-siem@192.168.20.10
+                   → ssh wazuh-siem@100.84.121.118
+Honeypot SSH       → ssh honeypot@192.168.30.10 -p 22222
+Windows Endpoint   → RDP 192.168.10.20                (fyep-2)
 Linux Endpoint     → ssh fyep-1@192.168.10.30
 Kali Linux         → Laptop Yusmadani (lokal)
 ```
 
 ---
 
-*Dibuat oleh: Dea Kristin Ginting (Project Manager)*
-*Terakhir diperbarui: 21 Mei 2026*
-*Repository: Capstone FYEP-15 / 15-fyep2026 · `/docs/infrastructure/PANDUAN_AKSES_VM.md`*
