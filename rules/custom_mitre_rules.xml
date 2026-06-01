@@ -1,3 +1,6 @@
+
+
+
 <group name="windows, cyber_security, capstone_fyep">
 
   <rule id="100001" level="10">
@@ -85,6 +88,16 @@
   <description>Suspicious Admin Login - Multiple logins outside business hours - Possible Account Compromise - MGM T1078</description>
   <mitre>
     <id>T1078</id>
+  </mitre>
+</rule>
+
+<!-- SSH brute force detection -->
+<rule id="100012" level="11" frequency="10" timeframe="120">
+  <if_matched_sid>5710</if_matched_sid>
+  <same_source_ip/>
+  <description>CyberSecurity Alert: T1110 - SSH Brute Force detected from $(srcip)</description>
+  <mitre>
+    <id>T1110</id>
   </mitre>
 </rule>
 
