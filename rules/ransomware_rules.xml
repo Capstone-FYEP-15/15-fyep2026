@@ -1,0 +1,34 @@
+<group name="ransomware,syscheck,">
+
+  <!-- Deteksi ekstensi file terenkripsi ransomware -->
+  <rule id="100700" level="12">
+    <if_group>syscheck</if_group>
+    <field name="file" type="pcre2">\.locked$|\.encrypted$|\.enc$|\.crypted$</field>
+    <description>RANSOMWARE DETECTED - Encrypted file extension found: $(file)</description>
+    <mitre>
+      <id>T1486</id>
+    </mitre>
+  </rule>
+
+  <!-- Eskalasi jika banyak file terenkripsi -->
+  <rule id="100701" level="15" frequency="10" timeframe="60">
+    <if_matched_sid>100700</if_matched_sid>
+    <description>RANSOMWARE CRITICAL - Mass file encryption detected: >10 files in 60 seconds</description>
+    <group>ransomware,critical,</group>
+    <mitre>
+      <id>T1486</id>
+      <id>T1490</id>
+    </mitre>
+  </rule>
+
+  <!-- Deteksi ransom note -->
+  <rule id="100702" level="14">
+    <if_group>syscheck</if_group>
+    <field name="file" type="pcre2">(?i)README|DECRYPT|RECOVER|HOW_TO|ransom</field>
+    <description>RANSOMWARE DETECTED - Ransom note file created: $(file)</description>
+    <mitre>
+      <id>T1486</id>
+    </mitre>
+  </rule>
+
+</group>

@@ -1,0 +1,30 @@
+<!-- Local rules -->
+
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
+
+<!-- Example -->
+<group name="local,syslog,sshd,">
+
+  <!--
+  Dec 10 01:02:02 host sshd[1234]: Failed none for root from 1.1.1.1 port 1066 ssh2
+  diganti biar ga double-->
+  <rule id="100400" level="5">
+    <if_sid>5716</if_sid>
+    <srcip>1.1.1.1</srcip>
+    <description>sshd: authentication failed from IP 1.1.1.1.</description>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,</group>
+  </rule>
+
+  <rule id="100500" level="8">
+    <decoded_as>json</decoded_as>
+    <field name="event">new_host_discovered</field>
+    <description>New host discovered on network: $(ip)</description>
+    <group>
+      asset_discovery,
+      inventory,
+      rogue_device
+    </group>
+  </rule>
+
+</group>

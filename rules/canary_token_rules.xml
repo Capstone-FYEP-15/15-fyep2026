@@ -1,0 +1,49 @@
+<group name="canary_token,">
+
+  <!-- Rule Linux canary -->
+  <rule id="100200" level="12">
+    <if_group>audit</if_group>
+    <field name="audit.key">canary_token_linux</field>
+    <description>CANARY TOKEN TRIGGERED - /etc/db_passwords.conf accessed by $(audit.exe)</description>
+    <options>no_full_log</options>
+    <group>canary_token,</group>
+    <mitre>
+      <id>T1083</id>
+      <id>T1005</id>
+    </mitre>
+  </rule>
+
+  <!-- Rule Windows canary - match via full_log string -->
+  <rule id="100300" level="12">
+    <match>credentials.xlsx</match>
+    <description>CANARY TOKEN TRIGGERED - credentials.xlsx accessed</description>
+    <group>canary_token,</group>
+    <mitre>
+      <id>T1083</id>
+      <id>T1005</id>
+    </mitre>
+  </rule>
+
+  <!-- Eskalasi -->
+  <rule id="100301" level="15">
+    <if_sid>100200,100300</if_sid>
+    <description>CANARY TOKEN TRIGGERED - Possible Data Exfiltration: Canary file accessed</description>
+    <group>canary_token,data_exfiltration,</group>
+    <mitre>
+      <id>T1005</id>
+      <id>T1083</id>
+    </mitre>
+  </rule>
+
+  <!-- Rule untuk log dari canary-monitor.py -->
+<rule id="100302" level="12">
+  <match>CANARY TOKEN TRIGGERED</match>
+  <description>CANARY TOKEN TRIGGERED - Possible Data Access: credentials.xlsx accessed</description>
+  <group>canary_token,</group>
+  <mitre>
+    <id>T1083</id>
+    <id>T1005</id>
+  </mitre>
+</rule>
+
+</group>

@@ -1,0 +1,50 @@
+<group name="asset_discovery,">
+
+  <!-- New unknown host detected -->
+  <rule id="100600" level="8">
+    <decoded_as>json</decoded_as>
+    <field name="event">new_host_detected</field>
+    <description>ASSET DISCOVERY - New unrecognized host detected: $(ip) on network</description>
+    <group>asset_discovery,rogue_device,</group>
+    <mitre>
+      <id>T1200</id>
+      <id>T1046</id>
+    </mitre>
+  </rule>
+
+  <!-- Known host offline -->
+  <rule id="100601" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="event">host_offline</field>
+    <description>ASSET DISCOVERY - Known asset offline: $(ip)</description>
+    <group>asset_discovery,availability,</group>
+  </rule>
+
+  <!-- Host returned online -->
+  <rule id="100602" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="event">host_returned</field>
+    <description>ASSET DISCOVERY - Previously offline host is back online: $(ip)</description>
+    <group>asset_discovery,</group>
+  </rule>
+
+  <!-- Scan summary -->
+  <rule id="100603" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="event">scan_summary</field>
+    <description>ASSET DISCOVERY - Daily scan complete: $(total_hosts) hosts found</description>
+    <group>asset_discovery,</group>
+  </rule>
+
+  <!-- Rogue device in VLAN10 — match via alert field -->
+  <rule id="100604" level="12">
+    <if_sid>100600</if_sid>
+    <field name="alert">ROGUE DEVICE</field>
+    <description>CRITICAL - Rogue device detected in production network: $(ip)</description>
+    <group>asset_discovery,rogue_device,critical,</group>
+    <mitre>
+      <id>T1200</id>
+    </mitre>
+  </rule>
+
+</group>
