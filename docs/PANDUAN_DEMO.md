@@ -3,8 +3,6 @@
 
 ---
 
-## Persiapan (H-10 menit)
-
 ### 1. Buka semua tab browser
 ```
 Tab 1 : https://100.84.121.118          → Wazuh Security Events
