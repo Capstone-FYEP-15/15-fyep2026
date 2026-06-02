@@ -256,7 +256,7 @@ DETEKSI → CONTAINMENT → ERADICATION → RECOVERY → LESSONS LEARNED
 
 ## 8. Skenario 3 — Lateral Movement
 
-> ⏳ **STATUS: OUTLINE — Akan dilengkapi di Minggu 3 setelah simulasi Mimikatz + Pass-the-Hash selesai. Romadhona akan mereview dan memvalidasi prosedur teknis berdasarkan hasil simulasi aktual.**
+> ✅ **STATUS: FINAL — Approved Juni 2026 berdasarkan hasil simulasi 25–30 Mei 2026**
 
 | Atribut | Detail |
 |---|---|
@@ -265,81 +265,150 @@ DETEKSI → CONTAINMENT → ERADICATION → RECOVERY → LESSONS LEARNED
 | MITRE ATT&CK | T1003 — Credential Dumping, T1550.002 — Pass-the-Hash, T1021 — Remote Services |
 | Referensi Kasus | MGM/Caesars 2023 — admin credential dicuri via Mimikatz, digunakan untuk enkripsi database |
 | PIC Utama | Rafli (SIEM), Triyas (Network isolation), Yusmadani (forensik) |
+| Rule ID Terpicu | 92900 (Mimikatz/LSASS), 100004 (Lateral Movement SMB) |
 
 ### Pemetaan MITRE ATT&CK
 
 | Technique ID | Nama Teknik | Taktik | Relevansi |
 |---|---|---|---|
-| T1003 | OS Credential Dumping | Credential Access | Mimikatz mengakses lsass.exe untuk dump hash |
+| T1003 | OS Credential Dumping | Credential Access | Mimikatz mengakses lsass.exe untuk dump hash — terdeteksi Rule 92900 |
 | T1550.002 | Pass-the-Hash | Defense Evasion | Menggunakan hash NTLM untuk autentikasi tanpa password |
-| T1021 | Remote Services | Lateral Movement | Akses ke host lain menggunakan hash curian via SMB/WMI |
-| T1078 | Valid Accounts | Defense Evasion | Menggunakan akun admin yang sah dengan hash yang dicuri |
+| T1021 | Remote Services | Lateral Movement | Akses ke host lain via SMB/WMI — terdeteksi + diblokir Rule 100004 |
+| T1078 | Valid Accounts | Defense Evasion | Menggunakan akun admin sah dengan hash yang dicuri |
 
-### Deteksi *(outline)*
+### Deteksi
 
-> Wazuh alert T1003 (akses lsass.exe) + T1550.002 (hash-based auth) + notifikasi Telegram CRITICAL.
+1. Wazuh alert T1003 muncul di dashboard dengan label **"LSASS Access / Mimikatz Detected"** (Rule ID: 92900, Severity Level: 13) saat proses mencurigakan mengakses lsass.exe via Sysmon Event ID 10.
+2. Notifikasi Telegram CRITICAL diterima seluruh tim dalam < 15 detik dengan detail: Rule ID, Severity Level, deskripsi serangan, IP penyerang, username, aset terdampak, dan timestamp.
+3. Rafli memverifikasi alert di Wazuh Dashboard: filter `rule.id: 92900` dan konfirmasi sebagai True Positive.
+4. Cek apakah ada alert T1021 (Rule ID: 100004) yang muncul bersamaan — indikator penyerang sudah mulai bergerak lateral via SMB/WMI.
+5. Catat waktu deteksi dan update status insiden ke **"DETECTED - CRITICAL"** — aktifkan war room Discord segera.
 
-### Containment *(outline)*
+> **Referensi kasus nyata:** Teknik ini digunakan oleh Scattered Spider dalam serangan MGM Resorts 2023. Penyerang menggunakan Mimikatz untuk mencuri kredensial admin, lalu bergerak bebas ke seluruh sistem MGM menggunakan hash NTLM yang dicuri (MITRE T1003, T1550.002). Serangan berhasil mengenkripsi ribuan server dan menyebabkan kerugian lebih dari $100 juta.
 
-> Isolasi host sumber secara manual + mikrosegmentasi VLAN oleh Triyas + disable akun admin yang dikompromikan.
+### Containment
 
-### Eradication *(outline)*
+1. **[SEGERA]** Triyas mengisolasi host sumber dari semua VLAN di pfSense:
+   - pfSense GUI → Firewall → Rules → VLAN10
+   - Tambahkan rule **BLOCK ALL** dari IP host sumber
+   - Klik **Apply Changes**
+2. Rafli memverifikasi di Wazuh bahwa tidak ada koneksi baru dari host yang terisolasi — filter `agent.ip: [IP host]`.
+3. Disable semua akun admin yang kredensialnya diduga dikompromikan:
+   - Windows: `Computer Management → Local Users → klik kanan akun → Properties → centang "Account is disabled"`
+4. Triyas memblokir protokol SMB dan WMI antar VLAN di pfSense untuk mencegah pergerakan lateral lebih jauh:
+   - pfSense → Firewall → Rules → blokir port **445 (SMB)** dan **135 (WMI)** antar VLAN
+5. Active Response Wazuh otomatis memblokir IP sumber via `firewall-drop` dalam < 30 detik setelah Rule 100004 terpicu.
+6. Hubungi Dea untuk update status: *"Containment selesai, host [X] terisolasi, akun admin [username] dinonaktifkan."*
 
-> Forensik endpoint: cek memory dump, process list, network connections + identifikasi semua host yang diakses.
+### Eradication
 
-### Recovery *(outline)*
+1. Yusmadani melakukan forensik pada host sumber:
+   - Cek memory dump untuk jejak Mimikatz
+   - Cek process list: `tasklist /v` (Windows)
+   - Cek network connections: `netstat -ano`
+   - Cek command history PowerShell: `Get-History`
+2. Identifikasi semua host yang sudah diakses menggunakan hash curian — cek Wazuh alert Rule 100004 untuk daftar IP yang pernah dikontak.
+3. Rafli memeriksa Wazuh alert history 48 jam terakhir untuk memastikan tidak ada host lain yang sudah dikompromikan sebelum terdeteksi.
+4. Reset semua password dan hash akun admin yang terdampak — hash lama tidak bisa digunakan lagi setelah password diganti.
+5. Romadhona mendokumentasikan semua temuan forensik dalam tabel QA dan laporan insiden di `/docs/incidents/`.
 
-> Reimaging host yang dikompromikan + reset semua kredensial admin + verifikasi tidak ada persistence.
+### Recovery
 
-### Lessons Learned *(outline)*
+1. Verifikasi semua akun admin yang direset bisa login normal setelah password baru ditetapkan.
+2. Triyas membuka kembali akses VLAN secara bertahap setelah forensik selesai dan dipastikan bersih.
+3. Monitor Wazuh dashboard selama 4 jam berikutnya — pantau Rule 92900, 100004 untuk memastikan tidak ada aktivitas serupa.
+4. Verifikasi micro-segmentation berjalan normal: test ping dari VLAN Production ke VLAN Management harus tetap **gagal** (sesuai firewall rules pfSense).
+5. Informasikan Dea bahwa Recovery selesai dan sistem kembali normal. Target total downtime maksimal **4 jam (BR-01)**.
 
-> Update IAM policy + perkuat monitoring T1003 + dokumentasi TTP penyerang.
+### Lessons Learned
+
+1. Dokumentasikan seluruh timeline insiden dari T0 hingga Recovery selesai di `/docs/incidents/[tanggal]-lateral-movement-report.md`.
+2. Berdasarkan simulasi 25–30 Mei 2026: Rule 92900 berhasil mendeteksi Mimikatz dan Rule 100004 berhasil mendeteksi + memblokir Lateral Movement SMB secara otomatis.
+3. Referensi kasus MGM 2023: penyerang masuk via social engineering IT Helpdesk, lalu gunakan Mimikatz untuk credential dumping — IAM Policy (Issue #08) adalah mitigasi utama untuk mencegah akun memiliki privilege berlebih.
+4. Rafli memperbarui Wazuh rules untuk mendeteksi pola Pass-the-Hash lebih awal jika ditemukan blind spot.
+5. Update IAM Policy berdasarkan temuan: evaluasi apakah ada akun yang masih memiliki privilege terlalu tinggi.
 
 ---
 
 ## 9. Skenario 4 — Ransomware / Enkripsi Massal
 
-> ⏳ **STATUS: OUTLINE — Akan dilengkapi di Minggu 3 setelah simulasi ransomware behavior (FIM threshold 50 file/menit) selesai. Romadhona akan mereview prosedur recovery berdasarkan hasil simulasi aktual.**
+> ✅ **STATUS: FINAL — Approved Juni 2026 berdasarkan hasil simulasi 25–30 Mei 2026**
 
 | Atribut | Detail |
 |---|---|
 | Tipe Insiden | Enkripsi massal file oleh ransomware di endpoint atau production server |
-| Severity Default | CRITICAL (level 15) — dampak langsung ke operasional |
+| Severity Default | CRITICAL (level 12–15) — dampak langsung ke operasional |
 | MITRE ATT&CK | T1486 — Data Encrypted for Impact, T1490 — Inhibit System Recovery |
 | Referensi Kasus | MGM/Caesars 2023 — database produksi dienkripsi penyerang via credential lateral movement |
-| Target Recovery | Maksimal 4 jam downtime (BR-01) — backup restore harus siap |
+| Target Recovery | Maksimal 4 jam downtime (BR-01) |
 | PIC Utama | Dea (eskalasi), Triyas (isolasi jaringan), Rafli (forensik SIEM) |
+| Rule ID Terpicu | 100700 (enkripsi file), 100701 (CRITICAL mass encryption), 100702 (ransom note) |
 
 ### Pemetaan MITRE ATT&CK
 
 | Technique ID | Nama Teknik | Taktik | Relevansi |
 |---|---|---|---|
-| T1486 | Data Encrypted for Impact | Impact | Ransomware mengenkripsi file produksi secara massal |
+| T1486 | Data Encrypted for Impact | Impact | Ransomware mengenkripsi file produksi secara massal — terdeteksi Rule 100700-702 |
 | T1490 | Inhibit System Recovery | Impact | Menghapus shadow copy/backup untuk cegah recovery |
 | T1083 | File and Directory Discovery | Discovery | Ransomware mencari file target sebelum enkripsi |
 | T1036 | Masquerading | Defense Evasion | Ransomware menyamar sebagai proses sistem yang sah |
 
-### Deteksi *(outline)*
+### Deteksi
 
-> Wazuh FIM alert CRITICAL: >50 file berubah dalam 1 menit di `/var/db/production` atau `C:\Users\`. Notifikasi Telegram segera.
+1. Wazuh FIM alert CRITICAL muncul di dashboard saat **>50 file berubah dalam 1 menit** di direktori produksi (Rule ID: 100700–100702, Severity Level: 12–15).
+2. Alert berlabel:
+   - `RANSOMWARE DETECTED - Encrypted file extension found` (Rule 100700, Level 12)
+   - `RANSOMWARE CRITICAL - Mass file encryption detected: >10 files` (Rule 100701, Level 15)
+   - `RANSOMWARE DETECTED - Ransom note file created` (Rule 100702, Level 14)
+3. Notifikasi Telegram CRITICAL diterima seluruh tim dalam < 15 detik dengan detail: direktori terdampak, jumlah file berubah, nama proses, dan timestamp.
+4. Rafli memverifikasi alert di Wazuh Dashboard: filter `rule.groups: ransomware` atau `rule.id: 100700-100702`.
+5. Konfirmasi True Positive: cek file `.locked` di direktori target dan cek `archives.json` untuk volume perubahan file.
+6. Update status insiden ke **"DETECTED - CRITICAL"** dan aktifkan war room Discord segera.
 
-### Containment *(outline)*
+> **Referensi kasus nyata:** Dalam serangan MGM/Caesars 2023, setelah berhasil masuk via social engineering dan lateral movement, penyerang mengaktifkan ransomware ALPHV/BlackCat yang mengenkripsi ribuan server MGM secara serentak (MITRE T1486). MGM mengalami kerugian lebih dari $100 juta dan Caesars memilih membayar tebusan $15 juta.
 
-> Triyas ISOLASI TOTAL host yang terinfeksi dari semua VLAN dalam <5 menit. Hentikan semua koneksi SMB/RDP.
+### Containment
 
-### Eradication *(outline)*
+1. **[SEGERA — dalam 5 menit]** Triyas melakukan ISOLASI TOTAL host yang terinfeksi:
+   - pfSense GUI → Firewall → Rules
+   - Tambahkan rule **BLOCK ALL** traffic dari dan ke IP host terinfeksi
+   - Klik **Apply Changes**
+2. Hentikan semua koneksi SMB dan RDP dari host terinfeksi untuk mencegah ransomware menyebar:
+   - pfSense → Firewall → Rules → blokir port **445 (SMB)** dan **3389 (RDP)** dari IP host terinfeksi
+3. **Jangan matikan host yang terinfeksi dulu** — forensik harus dilakukan dalam kondisi sistem masih menyala untuk mengambil bukti dari memory.
+4. Rafli memverifikasi di Wazuh bahwa FIM alert berhenti setelah isolasi dilakukan.
+5. Hubungi Dea segera untuk aktivasi war room: *"CRITICAL — Ransomware terdeteksi di host [X], isolasi sudah dilakukan, war room aktif sekarang."*
 
-> Identifikasi ransomware binary + vector masuk + semua host yang terinfeksi. Jangan restart sebelum forensik selesai.
+### Eradication
 
-### Recovery *(outline)*
+1. Yusmadani melakukan forensik pada host terinfeksi sebelum dimatikan:
+   - Ambil memory dump: `procdump -ma [PID ransomware]`
+   - Catat nama proses ransomware: `tasklist`
+   - Catat koneksi jaringan aktif: `netstat -ano`
+   - Identifikasi vector masuk: cek Windows Event Log ID 4624 (login berhasil)
+2. Identifikasi semua file yang sudah dienkripsi: cek Wazuh FIM log Rule 100700 untuk daftar lengkap file yang berubah.
+3. Pastikan tidak ada host lain yang sudah terinfeksi: cek Wazuh FIM alert di semua endpoint untuk perubahan file massal.
+4. Rafli membuat custom Wazuh rule baru berdasarkan signature ransomware yang ditemukan untuk deteksi lebih cepat di masa depan.
+5. Romadhona mendokumentasikan seluruh temuan dalam tabel QA dan laporan insiden.
 
-> Restore dari snapshot VMware terakhir yang bersih. Target: layanan kembali normal dalam 4 jam (BR-01).
+### Recovery
 
-### Lessons Learned *(outline)*
+1. **Jangan restore dulu** sebelum forensik selesai dan vector masuk teridentifikasi — jika vector belum ditutup, ransomware akan kembali.
+2. Triyas melakukan restore dari snapshot VMware terakhir yang bersih:
+   - VMware → klik kanan VM → Snapshot → Revert to Snapshot
+   - Pilih snapshot **"before-attack-simulation"** → Confirm
+3. Setelah restore, verifikasi semua layanan produksi berjalan normal.
+4. Monitor Wazuh FIM selama 2 jam setelah restore: pastikan tidak ada perubahan file massal yang baru.
+5. Target: layanan kembali normal dalam **4 jam sesuai BR-01**.
+6. Informasikan Dea bahwa Recovery selesai: *"Recovery selesai pukul [X], layanan normal, total downtime [Y] jam."*
 
-> Evaluasi kecepatan deteksi FIM, update backup policy, evaluasi air-gap backup untuk production server.
+### Lessons Learned
 
----
+1. Dokumentasikan seluruh timeline insiden dari T0 hingga Recovery selesai di `/docs/incidents/[tanggal]-ransomware-report.md`.
+2. Berdasarkan simulasi 25–30 Mei 2026: Rule 100700-702 berhasil mendeteksi enkripsi massal 60 file dengan Severity Level 12–15. Threshold >50 file/menit terbukti efektif.
+3. Referensi kasus MGM/Caesars 2023: ransomware ALPHV/BlackCat berhasil mengenkripsi ribuan server karena tidak ada micro-segmentation — Project Sentinel sudah mengimplementasikan hal ini via pfSense VLAN sehingga penyebaran dapat dihentikan.
+4. Evaluasi backup policy: snapshot VMware sudah cukup untuk lab, namun untuk produksi nyata perlu air-gap backup yang terpisah dari jaringan.
+5. Romadhona memperbarui IAM Policy berdasarkan temuan: evaluasi akun mana yang digunakan ransomware untuk masuk dan pastikan privilege sudah sesuai Least Privilege.
 
 ## 10. Template Laporan Insiden
 
