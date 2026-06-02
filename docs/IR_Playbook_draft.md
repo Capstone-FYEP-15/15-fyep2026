@@ -8,7 +8,8 @@ Arsitektur Pertahanan Siber Berlapis dengan Deteksi Ancaman Proaktif berbasis Wa
 | Atribut | Detail |
 |---|---|
 | Dibuat oleh | Dea Kristin Ginting (Project Manager) |
-| Direview oleh | Romadhona Fitri Lestari (QA Analyst) — *Pending* |
+| Direview oleh | Romadhona Fitri Lestari (QA Analyst) — *Approved* |
+| Status | Final — Approved Juni 2026 |
 | Tanggal dibuat | 22 Mei 2026 |
 | Versi | 1.0 Draft |
 | Status | Draft — Finalisasi setelah Minggu 3 |
@@ -477,7 +478,7 @@ Gunakan template berikut untuk mendokumentasikan setiap insiden. Simpan di: `/do
 | Versi | Tanggal | Author | Perubahan |
 |---|---|---|---|
 | v1.0 | 22 Mei 2026 | Dea Kristin Ginting | Draft awal — cover, daftar isi, 4 skenario, 2 draft lengkap (Brute Force + Honeypot), template laporan insiden |
-| v1.1 | TBD (Minggu 3) | Romadhona Fitri Lestari | Review teknis + finalisasi Skenario 3 (Lateral Movement) + Skenario 4 (Ransomware) berdasarkan simulasi |
+| v1.1 | Juni 2026 | Romadhona Fitri Lestari | Review teknis selesai. Skenario 1 & 2 APPROVED. Skenario 3 (Lateral Movement) + Skenario 4 (Ransomware) dilengkapi dari outline menjadi prosedur penuh berdasarkan hasil simulasi 25–30 Mei 2026. Semua skenario APPROVED. |
 | v2.0 | TBD (Minggu 4) | Dea Kristin Ginting | Finalisasi penuh — semua skenario lengkap, lessons learned dari simulasi terintegrasi, siap presentasi |
 
 ---
